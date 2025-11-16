@@ -18,7 +18,7 @@ export interface SourceCheckResult {
 }
 
 /**
- * Check if a single video URL is accessible
+ * Check if a single video URL is accessible and actually contains video content
  */
 async function checkVideoUrl(url: string, retries = MAX_RETRIES): Promise<boolean> {
   if (!isValidUrlFormat(url)) {
@@ -30,21 +30,32 @@ async function checkVideoUrl(url: string, retries = MAX_RETRIES): Promise<boolea
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), CHECK_TIMEOUT);
 
+      // Use GET with Range header to check if it's actually a video
       const response = await fetch(url, {
-        method: 'HEAD',
+        method: 'GET',
         signal: controller.signal,
         headers: {
           'User-Agent': 'Mozilla/5.0',
           'Referer': new URL(url).origin,
+          'Range': 'bytes=0-1024', // Only fetch first 1KB to check
         },
       });
 
       clearTimeout(timeoutId);
 
-      // Consider 200, 206, and even 403 as "available" 
-      // (some sources block HEAD but work with actual playback)
-      if (response.ok || response.status === 206 || response.status === 403) {
-        return true;
+      // Only accept successful responses (200 OK or 206 Partial Content)
+      // Reject 403 Forbidden as it means we can't actually access the video
+      if (response.ok || response.status === 206) {
+        // Check content-type to ensure it's actually a video
+        const contentType = response.headers.get('content-type');
+        if (contentType && (
+          contentType.includes('video') || 
+          contentType.includes('mpegurl') || 
+          contentType.includes('m3u8') ||
+          contentType.includes('octet-stream')
+        )) {
+          return true;
+        }
       }
     } catch (error) {
       // If last attempt, return false

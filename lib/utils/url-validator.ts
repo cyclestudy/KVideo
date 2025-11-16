@@ -14,7 +14,7 @@ export interface ValidationResult {
 }
 
 /**
- * Check if a URL is accessible with HEAD request
+ * Check if a URL is accessible and contains video content
  */
 async function checkUrlAccessibility(url: string): Promise<ValidationResult> {
   const startTime = Date.now();
@@ -23,22 +23,34 @@ async function checkUrlAccessibility(url: string): Promise<ValidationResult> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), VALIDATION_TIMEOUT);
 
+    // Use GET with Range header to actually check video content
     const response = await fetch(url, {
-      method: 'HEAD',
+      method: 'GET',
       signal: controller.signal,
       headers: {
         'User-Agent': 'Mozilla/5.0',
         'Referer': new URL(url).origin,
+        'Range': 'bytes=0-1024', // Only fetch first 1KB
       },
     });
 
     clearTimeout(timeoutId);
 
+    // Check if response is successful and contains video content
+    const isSuccess = response.ok || response.status === 206;
+    const contentType = response.headers.get('content-type');
+    const isVideoContent = contentType && (
+      contentType.includes('video') || 
+      contentType.includes('mpegurl') || 
+      contentType.includes('m3u8') ||
+      contentType.includes('octet-stream')
+    );
+
     return {
       url,
-      isValid: response.ok || response.status === 403, // Some sources block HEAD but work with GET
+      isValid: isSuccess && !!isVideoContent,
       responseTime: Date.now() - startTime,
-      error: !response.ok && response.status !== 403 ? `HTTP ${response.status}` : undefined,
+      error: !isSuccess ? `HTTP ${response.status}` : (!isVideoContent ? 'Not video content' : undefined),
     };
   } catch (error) {
     return {
