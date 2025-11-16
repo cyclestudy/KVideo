@@ -15,7 +15,7 @@ function PlayerContent() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const [videoData, setVideoData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [currentEpisode, setCurrentEpisode] = useState(0);
   const [playUrl, setPlayUrl] = useState('');
   const [videoError, setVideoError] = useState<string>('');
@@ -54,12 +54,12 @@ function PlayerContent() {
       return;
     }
 
+    setLoading(true);
     fetchVideoDetails();
   }, [videoId, source]);
 
   const fetchVideoDetails = async () => {
     try {
-      setLoading(true);
       setVideoError(''); // Clear previous errors
       const response = await fetch(`/api/detail?id=${videoId}&source=${source}`);
       const data = await response.json();
@@ -85,6 +85,7 @@ function PlayerContent() {
         });
 
         setVideoData(data.data);
+        setLoading(false);
         if (data.data.episodes && data.data.episodes.length > 0) {
           const firstUrl = data.data.episodes[0].url;
           console.log('Setting initial play URL:', firstUrl);
@@ -100,7 +101,6 @@ function PlayerContent() {
     } catch (error) {
       console.error('Failed to fetch video details:', error);
       setVideoError(error instanceof Error ? error.message : 'Failed to load video details. Please try another source.');
-    } finally {
       setLoading(false);
     }
   };
@@ -188,7 +188,7 @@ function PlayerContent() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-[var(--accent-color)] border-t-transparent mb-4"></div>
-            <p className="text-[var(--text-color-secondary)]">正在检测视频源可用性...</p>
+            <p className="text-[var(--text-color-secondary)]">正在加载视频详情...</p>
           </div>
         ) : videoError && !videoData ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">

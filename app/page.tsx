@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useRef, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { Button } from '@/components/ui/Button';
@@ -12,7 +12,20 @@ import { Icons } from '@/components/ui/Icon';
 import { SearchLoadingAnimation } from '@/components/SearchLoadingAnimation';
 import Image from 'next/image';
 
-export default function Home() {
+// Cache interface
+interface SearchCache {
+  query: string;
+  results: any[];
+  availableSources: any[];
+  timestamp: number;
+}
+
+const CACHE_KEY = 'kvideo_search_cache';
+const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+
+function HomePage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
@@ -23,12 +36,85 @@ export default function Home() {
   const [searchStage, setSearchStage] = useState<'searching' | 'checking'>('searching');
   const [checkedVideos, setCheckedVideos] = useState(0);
   const [totalVideos, setTotalVideos] = useState(0);
-  const router = useRouter();
   const abortControllerRef = useRef<AbortController | null>(null);
+  const hasLoadedCache = useRef(false);
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim() || loading) return; // Prevent multiple searches
+  // Load cached results on mount
+  useEffect(() => {
+    if (hasLoadedCache.current) return;
+    hasLoadedCache.current = true;
+
+    const urlQuery = searchParams.get('q');
+    
+    // Try to load from cache
+    const cached = loadFromCache();
+    
+    if (urlQuery) {
+      // URL has query parameter
+      setQuery(urlQuery);
+      
+      if (cached && cached.query === urlQuery) {
+        // Use cached results if they match the URL query
+        console.log('📦 Loading cached results for:', urlQuery);
+        setResults(cached.results);
+        setAvailableSources(cached.availableSources);
+        setHasSearched(true);
+      } else {
+        // Trigger automatic search for URL query
+        console.log('🔍 Auto-searching for URL query:', urlQuery);
+        setTimeout(() => performSearch(urlQuery), 100);
+      }
+    } else if (cached) {
+      // No URL query but cache exists - restore last search
+      console.log('📦 Restoring last search from cache:', cached.query);
+      setQuery(cached.query);
+      setResults(cached.results);
+      setAvailableSources(cached.availableSources);
+      setHasSearched(true);
+      
+      // Update URL to reflect cached search
+      router.replace(`/?q=${encodeURIComponent(cached.query)}`, { scroll: false });
+    }
+  }, [searchParams, router]);
+
+  // Cache helper functions
+  const saveToCache = (searchQuery: string, searchResults: any[], sources: any[]) => {
+    const cache: SearchCache = {
+      query: searchQuery,
+      results: searchResults,
+      availableSources: sources,
+      timestamp: Date.now(),
+    };
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+      console.log('💾 Saved search to cache:', searchQuery, searchResults.length, 'results');
+    } catch (error) {
+      console.error('Failed to save cache:', error);
+    }
+  };
+
+  const loadFromCache = (): SearchCache | null => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (!cached) return null;
+      
+      const cache: SearchCache = JSON.parse(cached);
+      
+      // Check if cache is still valid
+      if (Date.now() - cache.timestamp > CACHE_DURATION) {
+        localStorage.removeItem(CACHE_KEY);
+        return null;
+      }
+      
+      return cache;
+    } catch (error) {
+      console.error('Failed to load cache:', error);
+      return null;
+    }
+  };
+
+  const performSearch = async (searchQuery: string) => {
+    if (!searchQuery.trim() || loading) return;
 
     // Abort any previous search
     if (abortControllerRef.current) {
@@ -47,6 +133,9 @@ export default function Home() {
     setCheckedVideos(0);
     setTotalVideos(0);
     
+    // Update URL with query parameter
+    router.replace(`/?q=${encodeURIComponent(searchQuery)}`, { scroll: false });
+    
     try {
       // Get all enabled source IDs
       const sourceIds = ['dytt', 'ruyi', 'baofeng', 'tianya', 'feifan', 
@@ -57,7 +146,7 @@ export default function Home() {
       const response = await fetch('/api/search-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, sources: sourceIds }),
+        body: JSON.stringify({ query: searchQuery, sources: sourceIds }),
         signal: abortControllerRef.current.signal,
       });
 
@@ -158,6 +247,14 @@ export default function Home() {
               case 'complete':
                 setCheckedVideos(data.totalVideos);
                 setLoading(false);
+                
+                // Save final results to cache
+                const finalSourcesArray = Array.from(sourceVideoCounts.entries()).map(([sourceId, count]) => ({
+                  id: sourceId,
+                  name: getSourceName(sourceId),
+                  count,
+                }));
+                saveToCache(searchQuery, allVideos, finalSourcesArray);
                 break;
 
               case 'error':
@@ -177,6 +274,11 @@ export default function Home() {
     } finally {
       setCurrentSource('');
     }
+  };
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await performSearch(query);
   };
 
   const getSourceName = (sourceId: string): string => {
@@ -347,7 +449,7 @@ export default function Home() {
                     href={videoUrl}
                   >
                     <Card
-                      className={`p-0 overflow-hidden group cursor-pointer ${video.isNew ? 'animate-scale-in' : ''}`}
+                      className={`p-0 overflow-hidden group cursor-pointer flex flex-col h-full ${video.isNew ? 'animate-scale-in' : ''}`}
                     >
                       {/* Poster */}
                       <div className="relative aspect-[2/3] bg-[color-mix(in_srgb,var(--glass-bg)_50%,transparent)] overflow-hidden" style={{ borderRadius: 'var(--radius-2xl) var(--radius-2xl) 0 0' }}>
@@ -391,9 +493,9 @@ export default function Home() {
                         </div>
                       </div>
 
-                      {/* Info */}
-                      <div className="p-3">
-                        <h4 className="font-semibold text-sm text-[var(--text-color)] line-clamp-2 group-hover:text-[var(--accent-color)] transition-colors">
+                      {/* Info - Fixed height section */}
+                      <div className="p-3 flex-1 flex flex-col">
+                        <h4 className="font-semibold text-sm text-[var(--text-color)] line-clamp-2 min-h-[2.5rem] group-hover:text-[var(--accent-color)] transition-colors">
                           {video.vod_name}
                         </h4>
                         {video.vod_remarks && (
@@ -469,6 +571,7 @@ export default function Home() {
               onClick={() => {
                 setHasSearched(false);
                 setQuery('');
+                router.replace('/', { scroll: false });
               }}
             >
               返回首页
@@ -477,5 +580,15 @@ export default function Home() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin rounded-full h-16 w-16 border-4 border-[var(--accent-color)] border-t-transparent"></div>
+    </div>}>
+      <HomePage />
+    </Suspense>
   );
 }
