@@ -418,6 +418,16 @@ export function CustomVideoPlayer({
       const shortcuts = [' ', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'f', 'F', 'm', 'M', 'i', 'I', '<', '>', ',', '.'];
       if (shortcuts.includes(e.key)) {
         e.preventDefault();
+        
+        // Show controls when any shortcut key is pressed
+        setShowControls(true);
+        if (controlsTimeoutRef.current) {
+          clearTimeout(controlsTimeoutRef.current);
+        }
+        // Hide controls after 3 seconds if video is playing
+        if (isPlaying) {
+          controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 3000);
+        }
       }
 
       switch (e.key) {
