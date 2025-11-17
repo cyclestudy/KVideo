@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { getSourceName, SOURCE_IDS } from '@/lib/utils/source-names';
 import { checkVideoAvailability } from '@/lib/utils/source-checker';
+import { calculateRelevanceScore } from '@/lib/utils/search';
 
 interface Video {
   vod_id: string;
@@ -16,6 +17,9 @@ interface Video {
   isNew?: boolean;
   isVerifying?: boolean;
   vod_play_url?: string;
+  vod_actor?: string;
+  vod_director?: string;
+  relevanceScore?: number;
 }
 
 export interface ParallelSearchResult {
@@ -40,6 +44,7 @@ export function useParallelSearch(
   const [completedSources, setCompletedSources] = useState(0);
   const [totalSources, setTotalSources] = useState(0);
   const [totalVideosFound, setTotalVideosFound] = useState(0);
+  const currentQueryRef = useRef<string>('');
   
   const abortControllerRef = useRef<AbortController | null>(null);
   const verificationQueueRef = useRef<Video[]>([]);
@@ -65,12 +70,14 @@ export function useParallelSearch(
 
           setResults((prev) => {
             if (isValid) {
-              // Remove verifying badge
-              return prev.map((v) =>
+              // Remove verifying badge, maintain sort order
+              const updated = prev.map((v) =>
                 v.vod_id === video.vod_id && v.source === video.source
                   ? { ...v, isVerifying: false }
                   : v
               );
+              // Re-sort by relevance to maintain order
+              return updated.sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
             } else {
               // Remove invalid video
               const removedVideo = prev.find(
@@ -88,9 +95,11 @@ export function useParallelSearch(
                 );
               }
               
-              return prev.filter(
+              const filtered = prev.filter(
                 (v) => !(v.vod_id === video.vod_id && v.source === video.source)
               );
+              // Maintain sort order
+              return filtered.sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
             }
           });
 
@@ -118,9 +127,11 @@ export function useParallelSearch(
               );
             }
             
-            return prev.filter(
+            const filtered = prev.filter(
               (v) => !(v.vod_id === video.vod_id && v.source === video.source)
             );
+            // Maintain sort order
+            return filtered.sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
           });
 
           // Continue processing queue
@@ -159,6 +170,7 @@ export function useParallelSearch(
     verificationQueueRef.current = [];
     verifyingCountRef.current = 0;
     allVideosReceivedRef.current = false;
+    currentQueryRef.current = searchQuery.trim();
 
     // Update URL
     onUrlUpdate(searchQuery);
@@ -199,17 +211,23 @@ export function useParallelSearch(
               console.log(`[useParallelSearch] Started search for ${data.totalSources} sources`);
             } 
             else if (data.type === 'videos') {
+              const currentQuery = currentQueryRef.current;
               const newVideos: Video[] = data.videos.map((video: any) => ({
                 ...video,
                 sourceName: video.sourceDisplayName || getSourceName(video.source),
                 isNew: true,
                 isVerifying: true, // All videos start as verifying
+                relevanceScore: calculateRelevanceScore(video, currentQuery),
               }));
 
               console.log(`[useParallelSearch] Received ${newVideos.length} videos from source ${data.source}`);
 
-              // Add videos to display immediately
-              setResults((prev) => [...prev, ...newVideos]);
+              // Add videos and sort by relevance
+              setResults((prev) => {
+                const combined = [...prev, ...newVideos];
+                // Sort by relevance score (highest first)
+                return combined.sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
+              });
 
               // Queue videos for verification
               queueVideosForVerification(newVideos);
@@ -286,6 +304,7 @@ export function useParallelSearch(
     verificationQueueRef.current = [];
     verifyingCountRef.current = 0;
     allVideosReceivedRef.current = false;
+    currentQueryRef.current = '';
   }, []);
 
   /**
