@@ -610,7 +610,7 @@ export function CustomVideoPlayer({
         style={{ pointerEvents: showControls ? 'auto' : 'none' }}
       >
         {/* Progress Bar */}
-        <div className="px-4 pb-2">
+        <div className="px-4 pb-1">
           <div 
             ref={progressBarRef}
             className="slider-track cursor-pointer"
@@ -630,7 +630,7 @@ export function CustomVideoPlayer({
         </div>
 
         {/* Controls Bar */}
-        <div className="bg-gradient-to-t from-black/90 via-black/70 to-transparent px-4 pb-4 pt-6">
+        <div className="bg-gradient-to-t from-black/90 via-black/70 to-transparent px-4 pb-4 pt-2">
           <div className="flex items-center justify-between gap-4">
             {/* Left Controls */}
             <div className="flex items-center gap-3">
