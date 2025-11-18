@@ -1,16 +1,16 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary';
   children: React.ReactNode;
 }
 
-export function Button({ 
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ 
   variant = 'primary', 
   children, 
   className = '', 
   ...props 
-}: ButtonProps) {
+}, ref) => {
   const baseStyles = "inline-flex items-center justify-center px-4 py-2.5 md:px-6 md:py-3 font-semibold text-sm md:text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] touch-manipulation";
   
   const variants = {
@@ -43,12 +43,15 @@ export function Button({
 
   return (
     <button 
+      ref={ref}
       className={`${baseStyles} ${variants[variant]} ${className}`}
       {...props}
     >
       {children}
     </button>
   );
-}
+});
+
+Button.displayName = 'Button';
 
 

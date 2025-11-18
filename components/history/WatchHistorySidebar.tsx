@@ -9,12 +9,19 @@ import { useState, useEffect, useRef } from 'react';
 import { useHistoryStore } from '@/lib/store/history-store';
 import { Icons } from '@/components/ui/Icon';
 import { Button } from '@/components/ui/Button';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { HistoryItem } from './HistoryItem';
 import { HistoryEmptyState } from './HistoryEmptyState';
-import { trapFocus } from '@/lib/accessibility/focus-trap';
+import { trapFocus } from '@/lib/accessibility/focus-management';
 
 export function WatchHistorySidebar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean;
+    videoId?: string;
+    source?: string;
+    isClearAll?: boolean;
+  }>({ isOpen: false });
   const { viewingHistory, removeFromHistory, clearHistory } = useHistoryStore();
   const sidebarRef = useRef<HTMLElement>(null);
   const cleanupFocusTrapRef = useRef<(() => void) | null>(null);
@@ -49,6 +56,28 @@ export function WatchHistorySidebar() {
       document.removeEventListener('keydown', handleEscape);
     };
   }, [isOpen]);
+
+  // Handle delete confirmation
+  const handleDeleteItem = (videoId: string | number, source: string) => {
+    setDeleteConfirm({ isOpen: true, videoId: String(videoId), source });
+  };
+
+  const handleClearAll = () => {
+    setDeleteConfirm({ isOpen: true, isClearAll: true });
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirm.isClearAll) {
+      clearHistory();
+    } else if (deleteConfirm.videoId && deleteConfirm.source) {
+      removeFromHistory(deleteConfirm.videoId, deleteConfirm.source);
+    }
+    setDeleteConfirm({ isOpen: false });
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirm({ isOpen: false });
+  };
 
   return (
     <>
@@ -120,7 +149,7 @@ export function WatchHistorySidebar() {
                   playbackPosition={item.playbackPosition}
                   duration={item.duration}
                   timestamp={item.timestamp}
-                  onRemove={() => removeFromHistory(item.videoId, item.source)}
+                  onRemove={() => handleDeleteItem(item.videoId, item.source)}
                 />
               ))}
             </div>
@@ -132,7 +161,7 @@ export function WatchHistorySidebar() {
           <footer className="mt-4 pt-4 border-t border-[var(--glass-border)]">
             <Button
               variant="secondary"
-              onClick={clearHistory}
+              onClick={handleClearAll}
               className="w-full flex items-center justify-center gap-2"
             >
               <Icons.Trash size={18} />
@@ -141,6 +170,22 @@ export function WatchHistorySidebar() {
           </footer>
         )}
       </aside>
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={deleteConfirm.isOpen}
+        title={deleteConfirm.isClearAll ? '清空历史记录' : '删除历史记录'}
+        message={
+          deleteConfirm.isClearAll
+            ? '确定要清空所有观看历史吗？此操作无法撤销。'
+            : '确定要删除这条历史记录吗？'
+        }
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+        confirmText="删除"
+        cancelText="取消"
+        variant="danger"
+      />
     </>
   );
 }

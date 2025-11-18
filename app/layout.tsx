@@ -32,6 +32,15 @@ export default function RootLayout({
         <ThemeProvider>
           {children}
         </ThemeProvider>
+        
+        {/* ARIA Live Region for Screen Reader Announcements */}
+        <div
+          id="aria-live-announcer"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className="sr-only"
+        />
       </body>
     </html>
   );

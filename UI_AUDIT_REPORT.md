@@ -723,8 +723,8 @@ export const announceToScreenReader = (message: string) => {
   }
   ```
 
-#### 11. **添加确认对话框组件** (预计 2 小时)
-- [ ] 创建 `components/ui/ConfirmDialog.tsx`
+#### 11. **添加确认对话框组件** (预计 2 小时) ✅ **已完成**
+- [x] 创建 `components/ui/ConfirmDialog.tsx`
   ```tsx
   interface ConfirmDialogProps {
     isOpen: boolean;
@@ -734,18 +734,31 @@ export const announceToScreenReader = (message: string) => {
     onCancel: () => void;
   }
   ```
-- [ ] 在 `WatchHistorySidebar` 中使用
-- [ ] 在删除历史时显示确认对话框
+- [x] 在 `WatchHistorySidebar` 中使用
+- [x] 在删除历史时显示确认对话框
 
-#### 12. **创建可访问性工具库** (预计 3 小时)
-- [ ] 创建 `lib/accessibility/focus-management.ts`
-  - [ ] `trapFocus(container: HTMLElement)`
-  - [ ] `restoreFocus(element: HTMLElement)`
-  - [ ] `getFocusableElements(container: HTMLElement)`
+**实现细节**:
+- ✅ 创建了完整的 `ConfirmDialog` 组件，遵循 Liquid Glass 设计系统
+- ✅ 支持 danger/warning/info 三种变体
+- ✅ 完整的 ARIA 属性支持 (`alertdialog`, `aria-modal`, `aria-labelledby`, `aria-describedby`)
+- ✅ 键盘支持：Escape 键关闭，焦点管理
+- ✅ 在 `WatchHistorySidebar` 中集成，用于删除单个历史和清空全部历史
+- ✅ 更新 `Button` 组件支持 `forwardRef`，增强可访问性
 
-- [ ] 创建 `lib/accessibility/aria-announcer.ts`
-  - [ ] `announceToScreenReader(message: string)`
-  - [ ] 在 `layout.tsx` 中添加 live region
+#### 12. **创建可访问性工具库** (预计 3 小时) ✅ **已完成**
+- [x] 创建 `lib/accessibility/focus-management.ts`
+  - [x] `trapFocus(container: HTMLElement)`
+  - [x] `restoreFocus(element: HTMLElement)`
+  - [x] `getFocusableElements(container: HTMLElement)`
+  - [x] `saveFocus()` - 额外添加的实用函数
+
+- [x] 创建 `lib/accessibility/aria-announcer.ts`
+  - [x] `announceToScreenReader(message: string)`
+  - [x] `announceError(message: string)` - 额外添加
+  - [x] `announceSuccess(message: string)` - 额外添加
+  - [x] `announceLoading(message: string)` - 额外添加
+  - [x] `clearAnnouncer()` - 额外添加
+  - [x] 在 `layout.tsx` 中添加 live region
   ```tsx
   <div 
     id="aria-live-announcer" 
@@ -756,9 +769,24 @@ export const announceToScreenReader = (message: string) => {
   />
   ```
 
-- [ ] 创建 `lib/accessibility/keyboard-utils.ts`
-  - [ ] `isActivationKey(event: KeyboardEvent)`
-  - [ ] `handleEscape(callback: () => void)`
+- [x] 创建 `lib/accessibility/keyboard-utils.ts`
+  - [x] `isActivationKey(event: KeyboardEvent)`
+  - [x] `handleEscape(callback: () => void)`
+  - [x] `hasModifierKey(event: KeyboardEvent)` - 额外添加
+  - [x] `getArrowKeyDirection(event: KeyboardEvent)` - 额外添加
+  - [x] `preventDefaultForKeys(event: KeyboardEvent, keys: string[])` - 额外添加
+  - [x] `createKeyboardHandler(handlers: Record<string, Function>)` - 额外添加
+
+- [x] 创建 `lib/accessibility/index.ts` - 统一导出所有工具
+
+**实现细节**:
+- ✅ **focus-management.ts**: 完整的焦点管理工具，包括焦点陷阱、焦点恢复、获取可聚焦元素
+- ✅ **aria-announcer.ts**: 屏幕阅读器播报工具，支持不同优先级（polite/assertive）
+- ✅ **keyboard-utils.ts**: 键盘交互工具，涵盖激活键、Escape 键、方向键等
+- ✅ 在 `app/layout.tsx` 中添加了 ARIA live region
+- ✅ 在 `globals.css` 中添加了 `.sr-only` 工具类
+- ✅ 所有工具都有完整的 TypeScript 类型定义和中英文注释
+- ✅ 创建了统一的导出文件 `lib/accessibility/index.ts`，简化导入
 
 ---
 
