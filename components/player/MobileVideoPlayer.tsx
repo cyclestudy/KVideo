@@ -39,10 +39,14 @@ export function MobileVideoPlayer({
   const [skipAmount, setSkipAmount] = useState(0);
   const [skipSide, setSkipSide] = useState<'left' | 'right' | null>(null);
   const [showSkipIndicator, setShowSkipIndicator] = useState(false);
+  const [wasPlayingBeforeMenu, setWasPlayingBeforeMenu] = useState(false);
   
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const skipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isDraggingProgressRef = useRef(false);
+  const menuIdleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const submenuIdleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isTogglingRef = useRef(false);
 
   // Screen orientation management
   useScreenOrientation(isFullscreen);
@@ -145,12 +149,106 @@ export function MobileVideoPlayer({
     };
   }, [isPlaying]);
 
-  const togglePlay = () => {
-    if (!videoRef.current) return;
-    if (isPlaying) {
-      videoRef.current.pause();
-    } else {
-      videoRef.current.play();
+  // Auto-close more menu after 2 seconds
+  useEffect(() => {
+    if (showMoreMenu) {
+      // Pause video when menu opens
+      if (videoRef.current && isPlaying) {
+        setWasPlayingBeforeMenu(true);
+        videoRef.current.pause();
+      }
+      
+      // Clear existing timeout
+      if (menuIdleTimeoutRef.current) {
+        clearTimeout(menuIdleTimeoutRef.current);
+      }
+      
+      // Set timeout to auto-close after 2 seconds
+      menuIdleTimeoutRef.current = setTimeout(() => {
+        setShowMoreMenu(false);
+        
+        // Resume video if it was playing
+        if (wasPlayingBeforeMenu && videoRef.current) {
+          videoRef.current.play().catch(err => console.warn('Resume play error:', err));
+          setWasPlayingBeforeMenu(false);
+        }
+      }, 2000);
+    }
+    
+    return () => {
+      if (menuIdleTimeoutRef.current) {
+        clearTimeout(menuIdleTimeoutRef.current);
+      }
+    };
+  }, [showMoreMenu, isPlaying, wasPlayingBeforeMenu]);
+
+  // Pause video when submenus open (no auto-close)
+  useEffect(() => {
+    if (showVolumeMenu || showSpeedMenu) {
+      // Pause video when submenu opens
+      if (videoRef.current && isPlaying) {
+        setWasPlayingBeforeMenu(true);
+        videoRef.current.pause();
+      }
+    }
+  }, [showVolumeMenu, showSpeedMenu, isPlaying]);
+
+  // Close all menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as HTMLElement;
+      
+      // Check if click is outside menu areas
+      const isMenuClick = target.closest('.menu-container') || 
+                          target.closest('[aria-label="更多"]');
+      
+      if (!isMenuClick && (showMoreMenu || showVolumeMenu || showSpeedMenu)) {
+        setShowMoreMenu(false);
+        setShowVolumeMenu(false);
+        setShowSpeedMenu(false);
+        
+        // Resume video if it was playing
+        if (wasPlayingBeforeMenu && videoRef.current) {
+          videoRef.current.play().catch(err => console.warn('Resume play error:', err));
+          setWasPlayingBeforeMenu(false);
+        }
+      }
+    };
+
+    if (showMoreMenu || showVolumeMenu || showSpeedMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [showMoreMenu, showVolumeMenu, showSpeedMenu, wasPlayingBeforeMenu]);
+
+  const togglePlay = async () => {
+    if (!videoRef.current || isTogglingRef.current) return;
+    
+    isTogglingRef.current = true;
+    
+    try {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        // Close all menus when resuming playback
+        setShowMoreMenu(false);
+        setShowVolumeMenu(false);
+        setShowSpeedMenu(false);
+        
+        await videoRef.current.play();
+      }
+    } catch (error) {
+      console.warn('Play/pause error:', error);
+    } finally {
+      // Small delay to prevent rapid toggling
+      setTimeout(() => {
+        isTogglingRef.current = false;
+      }, 100);
     }
   };
 
@@ -378,16 +476,10 @@ export function MobileVideoPlayer({
         {/* Controls Bar */}
         <div className="bg-gradient-to-t from-black/90 via-black/70 to-transparent px-2 sm:px-4 pb-3 sm:pb-4 pt-2">
           <div className="flex items-center justify-between gap-1 sm:gap-2">
-            {/* Left: Play + Skip + Time */}
+            {/* Left: Play + Time */}
             <div className="flex items-center gap-1 sm:gap-2 min-w-0">
               <button onClick={togglePlay} className="btn-icon p-2 sm:p-2.5 flex-shrink-0" aria-label={isPlaying ? 'Pause' : 'Play'}>
                 {isPlaying ? <Icons.Pause size={20} className="sm:w-[22px] sm:h-[22px]" /> : <Icons.Play size={20} className="sm:w-[22px] sm:h-[22px]" />}
-              </button>
-              <button onClick={() => skipVideo(10, 'left')} className="btn-icon p-1.5 sm:p-2 flex-shrink-0" aria-label="后退10秒">
-                <Icons.SkipBack size={16} className="sm:w-[18px] sm:h-[18px]" />
-              </button>
-              <button onClick={() => skipVideo(10, 'right')} className="btn-icon p-1.5 sm:p-2 flex-shrink-0" aria-label="快进10秒">
-                <Icons.SkipForward size={16} className="sm:w-[18px] sm:h-[18px]" />
               </button>
               
               {/* Time Display */}
@@ -414,7 +506,7 @@ export function MobileVideoPlayer({
 
                 {/* More Menu Dropdown */}
                 {showMoreMenu && (
-                  <div className="absolute bottom-full right-0 mb-2 min-w-[160px] z-[100]">
+                  <div className="absolute bottom-full right-0 mb-2 min-w-[160px] z-[100] menu-container">
                     <div className="bg-[rgba(255,255,255,0.1)] backdrop-blur-[25px] rounded-[var(--radius-2xl)] border border-[rgba(255,255,255,0.2)] shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden">
                     {/* Volume Option */}
                     <button 
@@ -470,7 +562,7 @@ export function MobileVideoPlayer({
 
           {/* Volume Menu (shown after clicking from More menu) */}
           {showVolumeMenu && (
-            <div className="mt-3 pt-3 border-t border-white/20">
+            <div className="mt-3 pt-3 border-t border-white/20 menu-container">
               <div className="flex items-center gap-3">
                 <button onClick={toggleMute} className="btn-icon p-2">
                   {isMuted || volume === 0 ? <Icons.VolumeX size={18} /> : <Icons.Volume2 size={18} />}
@@ -496,7 +588,13 @@ export function MobileVideoPlayer({
                   {Math.round((isMuted ? 0 : volume) * 100)}
                 </span>
                 <button 
-                  onClick={() => setShowVolumeMenu(false)} 
+                  onClick={() => {
+                    setShowVolumeMenu(false);
+                    if (wasPlayingBeforeMenu && videoRef.current) {
+                      videoRef.current.play().catch(err => console.warn('Resume play error:', err));
+                      setWasPlayingBeforeMenu(false);
+                    }
+                  }} 
                   className="text-white/60 hover:text-white text-xs"
                 >
                   关闭
@@ -507,7 +605,7 @@ export function MobileVideoPlayer({
 
           {/* Speed Menu (shown after clicking from More menu) */}
           {showSpeedMenu && (
-            <div className="mt-3 pt-3 border-t border-white/20">
+            <div className="mt-3 pt-3 border-t border-white/20 menu-container">
               <div className="flex gap-2 flex-wrap">
                 {speeds.map((speed) => (
                   <button
@@ -515,6 +613,12 @@ export function MobileVideoPlayer({
                     onClick={() => {
                       changePlaybackSpeed(speed);
                       setShowSpeedMenu(false);
+                      
+                      // Resume video after changing speed
+                      if (wasPlayingBeforeMenu && videoRef.current) {
+                        videoRef.current.play().catch(err => console.warn('Resume play error:', err));
+                        setWasPlayingBeforeMenu(false);
+                      }
                     }}
                     className={`px-3 py-1.5 rounded-[var(--radius-full)] text-xs font-medium transition-colors ${
                       playbackRate === speed
@@ -526,7 +630,13 @@ export function MobileVideoPlayer({
                   </button>
                 ))}
                 <button 
-                  onClick={() => setShowSpeedMenu(false)} 
+                  onClick={() => {
+                    setShowSpeedMenu(false);
+                    if (wasPlayingBeforeMenu && videoRef.current) {
+                      videoRef.current.play().catch(err => console.warn('Resume play error:', err));
+                      setWasPlayingBeforeMenu(false);
+                    }
+                  }} 
                   className="ml-auto text-white/60 hover:text-white text-xs px-2"
                 >
                   关闭
