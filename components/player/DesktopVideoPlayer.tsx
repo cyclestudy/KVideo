@@ -50,6 +50,7 @@ export function DesktopVideoPlayer({
   const volumeBarTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isDraggingProgressRef = useRef(false);
   const isDraggingVolumeRef = useRef(false);
+  const mouseMoveThrottleRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check for PiP and AirPlay support
   useEffect(() => {
@@ -86,8 +87,15 @@ export function DesktopVideoPlayer({
     };
   }, [isPlaying, showSpeedMenu]);
 
-  // Handle mouse movement to show controls
+  // Handle mouse movement to show controls (throttled for performance)
   const handleMouseMove = () => {
+    // Throttle mouse move events to improve performance
+    if (mouseMoveThrottleRef.current) return;
+    
+    mouseMoveThrottleRef.current = setTimeout(() => {
+      mouseMoveThrottleRef.current = null;
+    }, 100); // Throttle to max 10 times per second
+    
     setShowControls(true);
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);

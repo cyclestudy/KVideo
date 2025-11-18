@@ -56,10 +56,13 @@ body {
   
   background-color: var(--bg-color);
   background-image: var(--bg-image);
-  background-attachment: fixed;
   color: var(--text-color);
   font-family: var(--font-family-system);
   transition: background 0.3s ease;
+  
+  /* Optimize scrolling performance */
+  will-change: scroll-position;
+  -webkit-overflow-scrolling: touch;
 }
 
 body.dark,
@@ -79,6 +82,14 @@ body.dark,
 
 *, *::before, *::after {
   box-sizing: border-box;
+  /* Optimize font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  /* Enable smooth scrolling with performance optimization */
+  scroll-behavior: smooth;
 }
 
 
@@ -270,12 +281,26 @@ body.dark,
   border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-md);
   border: 1px solid var(--glass-border);
-  transition: all var(--transition-fluid);
+  transition: transform var(--transition-fluid), box-shadow 0.2s ease;
+  
+  /* Use GPU acceleration for smooth animations */
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .glass-card:hover {
-  transform: translateY(-5px) scale(1.02);
+  transform: translateY(-5px) scale(1.02) translateZ(0);
   box-shadow: 0 8px 24px var(--shadow-color);
+}
+
+/* Optimize fixed/sticky elements for scrolling */
+nav:where(.sticky, .fixed),
+.sticky,
+.fixed {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .glass-input {
