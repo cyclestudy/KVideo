@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 
 interface BadgeProps {
   children: React.ReactNode;
@@ -8,7 +8,7 @@ interface BadgeProps {
   iconPosition?: 'left' | 'right';
 }
 
-export function Badge({ 
+const BadgeComponent = memo(function Badge({ 
   children, 
   variant = 'primary', 
   className = '',
@@ -17,18 +17,19 @@ export function Badge({
 }: BadgeProps) {
   const variants = {
     primary: "bg-[var(--accent-color)] text-white shadow-[var(--shadow-sm)]",
-    secondary: "bg-[var(--glass-bg)] backdrop-blur-[10px] [-webkit-backdrop-filter:blur(10px)] border border-[var(--glass-border)] text-[var(--text-color)]",
+    secondary: "bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-color)]",
   };
 
   const iconElement = icon && (
     <span 
-      className={`inline-flex items-center justify-center transition-transform duration-200 ${
+      className={`inline-flex items-center justify-center ${
         iconPosition === 'left' ? 'mr-1' : 'ml-1'
       }`}
       style={{ 
         width: '0.875em', 
         height: '0.875em',
-        transform: 'translateZ(0)' 
+        transform: 'translateZ(0)',
+        willChange: 'auto',
       }}
     >
       {icon}
@@ -42,15 +43,22 @@ export function Badge({
         px-2 py-0.5 md:px-3 md:py-1
         rounded-[var(--radius-full)]
         text-[10px] md:text-xs font-semibold
-        transition-all duration-200
         ${variants[variant]}
         ${className}
       `}
+      style={{
+        transform: 'translateZ(0)',
+        willChange: 'auto',
+      }}
     >
       {icon && iconPosition === 'left' && iconElement}
       {children}
       {icon && iconPosition === 'right' && iconElement}
     </span>
   );
-}
+});
+
+// Export both named and default for compatibility
+export const Badge = BadgeComponent;
+export { BadgeComponent as default };
 

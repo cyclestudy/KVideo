@@ -42,7 +42,7 @@ export const SourceBadges = memo(function SourceBadges({
   return (
     <Card 
       hover={false} 
-      className={`p-4 animate-fade-in ${className}`}
+      className={`p-4 animate-fade-in bg-[var(--bg-color)]/50 backdrop-blur-none saturate-100 shadow-sm border-[var(--glass-border)] ${className}`}
     >
       <div className="flex items-start gap-3">
         <div className="flex items-center gap-2 shrink-0 pt-1">
@@ -71,7 +71,7 @@ export const SourceBadges = memo(function SourceBadges({
                   focus:outline-none
                   ${isSelected 
                     ? 'bg-[var(--accent-color)] text-white border-[var(--accent-color)] shadow-md' 
-                    : 'bg-[var(--glass-bg)] text-[var(--text-color)] backdrop-blur-[10px] border-[var(--glass-border)] hover:border-[var(--accent-color)]'
+                    : 'bg-[var(--glass-bg)] text-[var(--text-color)] border-[var(--glass-border)] hover:border-[var(--accent-color)]'
                   }
                 `}
               >

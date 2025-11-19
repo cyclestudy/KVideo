@@ -46,6 +46,46 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '**.cn',
       },
+      {
+        protocol: 'http',
+        hostname: '**.net',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.net',
+      },
+      {
+        protocol: 'http',
+        hostname: '**.org',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.org',
+      },
+      {
+        protocol: 'http',
+        hostname: '**.tv',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.tv',
+      },
+      {
+        protocol: 'http',
+        hostname: '**.io',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.io',
+      },
+      {
+        protocol: 'http',
+        hostname: '**.xyz',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.xyz',
+      },
     ],
     // Add image optimization for better performance
     formats: ['image/webp'],

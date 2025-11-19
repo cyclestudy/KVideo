@@ -52,7 +52,7 @@ export function TypeBadgeItem({
         focus:outline-none
         ${isSelected 
           ? 'bg-[var(--accent-color)] text-white border-[var(--accent-color)] shadow-md' 
-          : 'bg-[var(--glass-bg)] text-[var(--text-color)] backdrop-blur-[10px] border-[var(--glass-border)] hover:border-[var(--accent-color)]'
+          : 'bg-[var(--glass-bg)] text-[var(--text-color)] border-[var(--glass-border)] hover:border-[var(--accent-color)]'
         }
       `}
     >

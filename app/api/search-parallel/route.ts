@@ -55,29 +55,34 @@ export async function POST(request: NextRequest) {
 
         // Search all sources in PARALLEL - don't wait for all to finish
         const searchPromises = sources.map(async (source: any) => {
+          const startTime = performance.now(); // Track start time
           try {
             console.log(`[Search Parallel] Searching source: ${source.id} (${getSourceDisplayName(source.id)})`);
             
             // Search this source
             const result = await searchVideos(query.trim(), [source], page);
+            const endTime = performance.now(); // Track end time
+            const latency = Math.round(endTime - startTime); // Calculate latency in ms
             const videos = result[0]?.results || [];
             
             completedSources++;
             totalVideosFound += videos.length;
 
-            console.log(`[Search Parallel] Source ${source.id} completed: ${videos.length} videos found`);
+            console.log(`[Search Parallel] Source ${source.id} completed in ${latency}ms: ${videos.length} videos found`);
 
-            // Stream videos immediately as they arrive
+            // Stream videos immediately as they arrive WITH latency data
             if (videos.length > 0) {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
                 type: 'videos',
                 videos: videos.map((video: any) => ({
                   ...video,
                   sourceDisplayName: getSourceDisplayName(source.id),
+                  latency, // Add latency to each video
                 })),
                 source: source.id,
                 completedSources,
-                totalSources: sources.length
+                totalSources: sources.length,
+                latency, // Also include at source level
               })}\n\n`));
             }
 
@@ -90,8 +95,10 @@ export async function POST(request: NextRequest) {
             })}\n\n`));
 
           } catch (error) {
+            const endTime = performance.now();
+            const latency = Math.round(endTime - startTime);
             // Log error but continue with other sources
-            console.error(`[Search Parallel] Source ${source.id} failed:`, error);
+            console.error(`[Search Parallel] Source ${source.id} failed after ${latency}ms:`, error);
             completedSources++;
             
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 

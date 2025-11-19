@@ -27,6 +27,7 @@ export interface VideoItem {
   vod_director?: string;
   vod_content?: string;
   source: string;
+  latency?: number; // Response time in milliseconds
 }
 
 // Episode Information
