@@ -105,7 +105,8 @@ export function WatchHistorySidebar() {
         aria-labelledby="history-sidebar-title"
         aria-hidden={!isOpen}
         style={{ 
-          transform: isOpen ? 'translateX(0)' : 'translateX(100%)'
+          transform: isOpen ? 'translate3d(0, 0, 0)' : 'translate3d(100%, 0, 0)',
+          willChange: isOpen ? 'transform' : 'auto'
         }}
         className={`fixed top-0 right-0 bottom-0 w-[85%] sm:w-[90%] max-w-[420px] z-[2000] bg-[var(--glass-bg)] backdrop-blur-[12px] saturate-[120%] border-l border-[var(--glass-border)] rounded-tl-[var(--radius-2xl)] rounded-bl-[var(--radius-2xl)] p-6 flex flex-col shadow-[0_8px_32px_rgba(0,0,0,0.2)] transition-transform duration-250 ease-out`}
       >
@@ -130,7 +131,10 @@ export function WatchHistorySidebar() {
         </header>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto -mx-2 px-2">
+        <div className="flex-1 overflow-y-auto -mx-2 px-2" style={{ 
+          transform: 'translate3d(0, 0, 0)',
+          WebkitOverflowScrolling: 'touch'
+        }}>
           {viewingHistory.length === 0 ? (
             <HistoryEmptyState />
           ) : (

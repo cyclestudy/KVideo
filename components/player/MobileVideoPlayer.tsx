@@ -262,10 +262,8 @@ export function MobileVideoPlayer({
     } catch (error) {
       console.warn('Play/pause error:', error);
     } finally {
-      // Small delay to prevent rapid toggling
-      setTimeout(() => {
-        isTogglingRef.current = false;
-      }, 100);
+      // Immediately release the toggle lock
+      isTogglingRef.current = false;
     }
   };
 
@@ -290,6 +288,12 @@ export function MobileVideoPlayer({
     if (initialTime > 0) {
       videoRef.current.currentTime = initialTime;
     }
+    
+    // Auto-play the video when loaded
+    videoRef.current.play().catch(err => {
+      console.warn('Autoplay was prevented:', err);
+      // Show a toast or indication that user needs to tap to play
+    });
   };
 
   const handleVideoError = () => {

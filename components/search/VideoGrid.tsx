@@ -101,52 +101,53 @@ const VideoCard = memo(({
                <Icons.Film size={64} className="text-[var(--text-color-secondary)] opacity-20" />
             </div>
           
-          {/* Source Badge - Top Left */}
-          {video.sourceName && (
-            <div className="absolute top-2 left-2 z-10">
-              <Badge variant="primary" className="text-xs bg-[var(--accent-color)]">
-                {video.sourceName}
-              </Badge>
-            </div>
-          )}
-          
-          {/* Latency Badge - Top Right */}
-          {video.latency !== undefined && (
-            <div className="absolute top-2 right-2 z-10">
-              <LatencyBadge latency={video.latency} />
-            </div>
-          )}
-          
-          {/* Overlay - Show on hover (desktop) or when active (mobile) */}
-          <div 
-            className={`absolute inset-0 bg-black/60 transition-opacity duration-300 ${
-              isActive ? 'opacity-100 lg:opacity-0 lg:group-hover:opacity-100' : 'opacity-0 lg:group-hover:opacity-100'
-            }`}
-            style={{ 
-              willChange: 'opacity',
-            }}
-          >
-            <div className="absolute bottom-0 left-0 right-0 p-3">
-              {/* Mobile indicator when active */}
-              {isActive && (
-                <div className="lg:hidden text-white/90 text-xs mb-2 font-medium">
-                  再次点击播放 →
-                </div>
-              )}
-              {video.type_name && (
-                <Badge variant="secondary" className="text-xs mb-2">
-                  {video.type_name}
+            {/* Badge Container - Top, spans full width with proper spacing */}
+            <div className="absolute top-2 left-2 right-2 z-10 flex items-start justify-between gap-1">
+              {/* Source Badge - Left */}
+              {video.sourceName && (
+                <Badge variant="primary" className="text-[10px] px-1.5 py-0.5 bg-[var(--accent-color)] flex-shrink-0 max-w-[50%] truncate">
+                  {video.sourceName}
                 </Badge>
               )}
-              {video.vod_year && (
-                <div className="flex items-center gap-1 text-white/80 text-xs">
-                  <Icons.Calendar size={12} />
-                  <span>{video.vod_year}</span>
+              
+              {/* Latency Badge - Right */}
+              {video.latency !== undefined && (
+                <div className="flex-shrink-0">
+                  <LatencyBadge latency={video.latency} className="text-[10px] px-1.5 py-0.5" />
                 </div>
               )}
             </div>
+          
+            {/* Overlay - Show on hover (desktop) or when active (mobile) */}
+            <div 
+              className={`absolute inset-0 bg-black/60 transition-opacity duration-300 ${
+                isActive ? 'opacity-100 lg:opacity-0 lg:group-hover:opacity-100' : 'opacity-0 lg:group-hover:opacity-100'
+              }`}
+              style={{ 
+                willChange: 'opacity',
+              }}
+            >
+              <div className="absolute bottom-0 left-0 right-0 p-3">
+                {/* Mobile indicator when active */}
+                {isActive && (
+                  <div className="lg:hidden text-white/90 text-xs mb-2 font-medium">
+                    再次点击播放 →
+                  </div>
+                )}
+                {video.type_name && (
+                  <Badge variant="secondary" className="text-xs mb-2">
+                    {video.type_name}
+                  </Badge>
+                )}
+                {video.vod_year && (
+                  <div className="flex items-center gap-1 text-white/80 text-xs">
+                    <Icons.Calendar size={12} />
+                    <span>{video.vod_year}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
 
         {/* Info - Fixed height section */}
         <div className="p-3 flex-1 flex flex-col">

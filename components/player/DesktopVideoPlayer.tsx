@@ -147,6 +147,12 @@ export function DesktopVideoPlayer({
     if (initialTime > 0) {
       videoRef.current.currentTime = initialTime;
     }
+    
+    // Auto-play the video when loaded
+    videoRef.current.play().catch(err => {
+      console.warn('Autoplay was prevented:', err);
+      // Autoplay may be blocked by browser policy, which is fine
+    });
   };
 
   const handleVideoError = () => {

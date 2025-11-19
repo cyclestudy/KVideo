@@ -19,9 +19,9 @@ export const LatencyBadge = memo(function LatencyBadge({ latency, className = ''
     <span
       className={`
         inline-flex items-center justify-center
-        px-2 py-0.5 md:px-3 md:py-1
+        px-1.5 py-0.5
         rounded-[var(--radius-full)]
-        text-[10px] md:text-xs font-mono font-semibold
+        text-[10px] font-mono font-semibold
         border
         ${className}
       `}

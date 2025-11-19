@@ -44,11 +44,10 @@ export function useSearchHistory(
     if (dropdownTimeoutRef.current) {
       clearTimeout(dropdownTimeoutRef.current);
     }
-    if (recentSearches.length > 0) {
-      setIsDropdownOpen(true);
-      setHighlightedIndex(-1);
-    }
-  }, [recentSearches.length]);
+    // Show dropdown even if there's no history (for consistent UX)
+    setIsDropdownOpen(true);
+    setHighlightedIndex(-1);
+  }, []);
 
   const hideDropdown = useCallback(() => {
     // Delay hiding to allow click events to fire

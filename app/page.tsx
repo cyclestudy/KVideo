@@ -105,9 +105,14 @@ function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Glass Navbar */}
-      <nav className="sticky top-0 z-50 pt-4 pb-2">
+      <nav className="sticky top-0 z-50 pt-4 pb-2" style={{
+        transform: 'translate3d(0, 0, 0)',
+        willChange: 'transform'
+      }}>
         <div className="max-w-7xl mx-auto px-4">
-          <div className="bg-[var(--glass-bg)] backdrop-blur-[12px] saturate-[120%] [-webkit-backdrop-filter:blur(12px)_saturate(120%)] border border-[var(--glass-border)] shadow-[var(--shadow-md)] px-6 py-4 rounded-[var(--radius-2xl)]">
+          <div className="bg-[var(--glass-bg)] backdrop-blur-[12px] saturate-[120%] [-webkit-backdrop-filter:blur(12px)_saturate(120%)] border border-[var(--glass-border)] shadow-[var(--shadow-md)] px-6 py-4 rounded-[var(--radius-2xl)]" style={{
+            transform: 'translate3d(0, 0, 0)'
+          }}>
             <div className="flex items-center justify-between">
               <Link 
                 href="/" 
@@ -147,7 +152,10 @@ function HomePage() {
       </nav>
 
       {/* Search Form - Separate from navbar */}
-      <div className="max-w-7xl mx-auto px-4 mt-6 mb-8">
+      <div className="max-w-7xl mx-auto px-4 mt-6 mb-8 relative" style={{
+        transform: 'translate3d(0, 0, 0)',
+        zIndex: 1000
+      }}>
         <SearchForm
           onSearch={handleSearch}
           onClear={handleReset}

@@ -46,6 +46,10 @@ export function SearchForm({
   } = useSearchHistory((selectedQuery) => {
     setQuery(selectedQuery);
     onSearch(selectedQuery);
+    // Blur the input after selecting from history
+    setTimeout(() => {
+      inputRef.current?.blur();
+    }, 100);
   });
 
   // Update query when initialQuery changes
@@ -60,6 +64,8 @@ export function SearchForm({
       addSearch(query.trim());
       onSearch(query);
       hideDropdown();
+      // Blur the input to remove focus
+      inputRef.current?.blur();
     }
   };
 
@@ -72,12 +78,17 @@ export function SearchForm({
   };
 
   const handleInputFocus = () => {
-    if (query.trim() === '') {
-      showDropdown();
-    }
+    // Always show dropdown when focused, regardless of content
+    showDropdown();
   };
 
-  const handleInputBlur = () => {
+  const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Check if the new focus target is within the dropdown
+    const relatedTarget = e.relatedTarget as HTMLElement;
+    if (relatedTarget && relatedTarget.closest('.search-history-dropdown')) {
+      // Don't hide dropdown if focus moved to dropdown
+      return;
+    }
     hideDropdown();
   };
 
@@ -108,7 +119,7 @@ export function SearchForm({
 
   return (
     <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
-      <div className="relative group">
+      <div className="relative group" style={{ isolation: 'isolate' }}>
         <Input
           ref={inputRef}
           type="text"
@@ -125,7 +136,7 @@ export function SearchForm({
           aria-autocomplete="list"
         />
         
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10">
           {query && (
             <button
               type="button"
