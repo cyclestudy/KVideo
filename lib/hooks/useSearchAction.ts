@@ -28,7 +28,7 @@ export function useSearchAction({ state, onCacheUpdate, onUrlUpdate }: UseSearch
 
     const abortControllerRef = useRef<AbortController | null>(null);
 
-    const performSearch = useCallback(async (searchQuery: string, sortBy: SortOption = 'default') => {
+    const performSearch = useCallback(async (searchQuery: string, sources: any[] = [], sortBy: SortOption = 'default') => {
         if (!searchQuery.trim()) return;
 
         // Abort any ongoing search
@@ -47,7 +47,7 @@ export function useSearchAction({ state, onCacheUpdate, onUrlUpdate }: UseSearch
             const response = await fetch('/api/search-parallel', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: searchQuery, sources: SOURCE_IDS }),
+                body: JSON.stringify({ query: searchQuery, sources: sources }),
                 signal: abortControllerRef.current.signal,
             });
 

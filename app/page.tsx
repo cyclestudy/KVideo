@@ -67,7 +67,10 @@ function HomePage() {
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     setHasSearched(true);
-    performSearch(searchQuery, currentSortBy as any);
+    const settings = settingsStore.getSettings();
+    // Filter enabled sources
+    const enabledSources = settings.sources.filter(s => s.enabled);
+    performSearch(searchQuery, enabledSources, currentSortBy as any);
   };
 
   const handleReset = () => {

@@ -27,11 +27,19 @@ async function handleDetailRequest(id: string | null, source: string | null, met
     );
   }
 
-  const sourceConfig = getSourceById(source);
+  let sourceConfig;
+
+  // If source is an object (from POST), use it
+  if (typeof source === 'object') {
+    sourceConfig = source;
+  } else {
+    // If source is a string ID (from GET), try to look it up
+    sourceConfig = getSourceById(source);
+  }
 
   if (!sourceConfig) {
     return NextResponse.json(
-      { error: 'Invalid source ID' },
+      { error: 'Invalid source configuration' },
       { status: 400 }
     );
   }

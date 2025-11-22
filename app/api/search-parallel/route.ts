@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     async start(controller) {
       try {
         const body = await request.json();
-        const { query, sources: sourceIds, page = 1 } = body;
+        const { query, sources: sourceConfigs, page = 1 } = body;
 
         // Validate input
         if (!query || typeof query !== 'string' || query.trim().length === 0) {
@@ -28,15 +28,15 @@ export async function POST(request: NextRequest) {
           return;
         }
 
-        // Get source configurations
-        const sources = sourceIds
-          .map((id: string) => getSourceById(id))
-          .filter((source: any): source is NonNullable<typeof source> => source !== undefined);
+        // Use provided sources or fallback to empty (client should provide them)
+        const sources = Array.isArray(sourceConfigs) && sourceConfigs.length > 0
+          ? sourceConfigs
+          : [];
 
         if (sources.length === 0) {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({
             type: 'error',
-            message: 'No valid sources'
+            message: 'No valid sources provided'
           })}\n\n`));
           controller.close();
           return;

@@ -10,14 +10,16 @@ interface AddSourceModalProps {
   onClose: () => void;
   onAdd: (source: VideoSource) => void;
   existingIds: string[];
+  initialValues?: VideoSource | null;
 }
 
-export function AddSourceModal({ isOpen, onClose, onAdd, existingIds }: AddSourceModalProps) {
+export function AddSourceModal({ isOpen, onClose, onAdd, existingIds, initialValues }: AddSourceModalProps) {
   const { name, setName, url, setUrl, error, handleSubmit } = useAddSourceForm({
     isOpen,
     existingIds,
     onAdd,
     onClose,
+    initialValues,
   });
 
   if (!isOpen) return null;
@@ -34,7 +36,7 @@ export function AddSourceModal({ isOpen, onClose, onAdd, existingIds }: AddSourc
           }`}
       >
         <div className="bg-[var(--glass-bg)] backdrop-blur-xl border border-[var(--glass-border)] rounded-[var(--radius-2xl)] shadow-[var(--shadow-md)] p-6">
-          <ModalHeader title="添加自定义源" onClose={onClose} />
+          <ModalHeader title={initialValues ? "编辑视频源" : "添加自定义源"} onClose={onClose} />
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -83,7 +85,7 @@ export function AddSourceModal({ isOpen, onClose, onAdd, existingIds }: AddSourc
                 type="submit"
                 className="flex-1 px-6 py-3 rounded-[var(--radius-2xl)] bg-[var(--accent-color)] text-white font-semibold hover:brightness-110 hover:-translate-y-0.5 shadow-[var(--shadow-sm)] transition-all duration-200"
               >
-                添加
+                {initialValues ? "保存" : "添加"}
               </button>
             </div>
           </form>

@@ -10,6 +10,7 @@ export function useSettingsPage() {
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
     const [isRestoreDefaultsDialogOpen, setIsRestoreDefaultsDialogOpen] = useState(false);
+    const [editingSource, setEditingSource] = useState<VideoSource | null>(null);
 
     useEffect(() => {
         const settings = settingsStore.getSettings();
@@ -23,8 +24,17 @@ export function useSettingsPage() {
     };
 
     const handleAddSource = (source: VideoSource) => {
-        const updated = [...sources, source];
+        const exists = sources.some(s => s.id === source.id);
+        const updated = exists
+            ? sources.map(s => s.id === source.id ? source : s)
+            : [...sources, source];
         handleSourcesChange(updated);
+        setEditingSource(null);
+    };
+
+    const handleEditSource = (source: VideoSource) => {
+        setEditingSource(source);
+        setIsAddModalOpen(true);
     };
 
     const handleSortChange = (newSort: SortOption) => {
@@ -78,6 +88,7 @@ export function useSettingsPage() {
         setIsImportModalOpen,
         setIsResetDialogOpen,
         setIsRestoreDefaultsDialogOpen,
+        setEditingSource,
         handleSourcesChange,
         handleAddSource,
         handleSortChange,
@@ -85,5 +96,7 @@ export function useSettingsPage() {
         handleImport,
         handleRestoreDefaults,
         handleResetAll,
+        editingSource,
+        handleEditSource,
     };
 }

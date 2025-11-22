@@ -31,6 +31,9 @@ export default function SettingsPage() {
     handleImport,
     handleRestoreDefaults,
     handleResetAll,
+    editingSource,
+    handleEditSource,
+    setEditingSource,
   } = useSettingsPage();
 
   return (
@@ -44,7 +47,11 @@ export default function SettingsPage() {
           sources={sources}
           onSourcesChange={handleSourcesChange}
           onRestoreDefaults={() => setIsRestoreDefaultsDialogOpen(true)}
-          onAddSource={() => setIsAddModalOpen(true)}
+          onAddSource={() => {
+            setEditingSource(null);
+            setIsAddModalOpen(true);
+          }}
+          onEditSource={handleEditSource}
         />
 
         {/* Sort Options */}
@@ -64,9 +71,13 @@ export default function SettingsPage() {
       {/* Modals */}
       <AddSourceModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setEditingSource(null);
+        }}
         onAdd={handleAddSource}
         existingIds={sources.map(s => s.id)}
+        initialValues={editingSource}
       />
 
       <ExportModal

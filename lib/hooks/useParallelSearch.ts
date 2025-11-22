@@ -14,7 +14,7 @@ interface ParallelSearchResult {
   completedSources: number;
   totalSources: number;
   totalVideosFound: number;
-  performSearch: (query: string, sortBy?: SortOption) => Promise<void>;
+  performSearch: (query: string, sources?: any[], sortBy?: SortOption) => Promise<void>;
   resetSearch: () => void;
   loadCachedResults: (results: Video[], sources: any[]) => void;
   applySorting: (sortBy: SortOption) => void;
