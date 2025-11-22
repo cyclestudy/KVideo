@@ -15,6 +15,7 @@ interface MobileVideoPlayerProps {
   onError?: (error: string) => void;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
   initialTime?: number;
+  shouldAutoPlay?: boolean;
 }
 
 export function MobileVideoPlayer({
@@ -22,7 +23,8 @@ export function MobileVideoPlayer({
   poster,
   onError,
   onTimeUpdate,
-  initialTime = 0
+  initialTime = 0,
+  shouldAutoPlay = false
 }: MobileVideoPlayerProps) {
   const { refs, state } = useMobilePlayerState();
   const {
@@ -48,6 +50,7 @@ export function MobileVideoPlayer({
   const logic = useMobilePlayerLogic({
     src,
     initialTime,
+    shouldAutoPlay,
     onError,
     onTimeUpdate,
     refs,

@@ -17,6 +17,7 @@ interface UseMobilePlayerLogicProps {
     src: string;
     poster?: string;
     initialTime: number;
+    shouldAutoPlay: boolean;
     onError?: (error: string) => void;
     onTimeUpdate?: (currentTime: number, duration: number) => void;
     refs: any;
@@ -26,6 +27,7 @@ interface UseMobilePlayerLogicProps {
 export function useMobilePlayerLogic({
     src,
     initialTime,
+    shouldAutoPlay,
     onError,
     onTimeUpdate,
     refs,
@@ -67,7 +69,7 @@ export function useMobilePlayerLogic({
     } = state;
 
     const playbackControls = useMobilePlaybackControls(buildPlaybackParams({
-        videoRef, isPlaying, setIsPlaying, setIsLoading, initialTime, setDuration,
+        videoRef, isPlaying, setIsPlaying, setIsLoading, initialTime, shouldAutoPlay, setDuration,
         setCurrentTime, setPlaybackRate, setShowMoreMenu, setShowVolumeMenu,
         setShowSpeedMenu, onTimeUpdate, onError, isDraggingProgressRef, isTogglingRef
     }));

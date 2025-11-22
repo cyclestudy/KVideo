@@ -13,6 +13,7 @@ type DesktopPlayerState = ReturnType<typeof useDesktopPlayerState>;
 interface UseDesktopPlayerLogicProps {
     src: string;
     initialTime: number;
+    shouldAutoPlay: boolean;
     onError?: (error: string) => void;
     onTimeUpdate?: (currentTime: number, duration: number) => void;
     refs: DesktopPlayerState['refs'];
@@ -22,6 +23,7 @@ interface UseDesktopPlayerLogicProps {
 export function useDesktopPlayerLogic({
     src,
     initialTime,
+    shouldAutoPlay,
     onError,
     onTimeUpdate,
     refs,
@@ -57,7 +59,7 @@ export function useDesktopPlayerLogic({
 
     const playbackControls = usePlaybackControls({
         videoRef, isPlaying, setIsPlaying, setIsLoading,
-        initialTime, setDuration, setCurrentTime, onTimeUpdate, onError,
+        initialTime, shouldAutoPlay, setDuration, setCurrentTime, onTimeUpdate, onError,
         isDraggingProgressRef, speedMenuTimeoutRef, setPlaybackRate, setShowSpeedMenu
     });
 

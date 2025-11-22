@@ -10,6 +10,7 @@ interface CustomVideoPlayerProps {
   onError?: (error: string) => void;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
   initialTime?: number;
+  shouldAutoPlay?: boolean;
 }
 
 /**
@@ -19,8 +20,8 @@ interface CustomVideoPlayerProps {
  */
 export function CustomVideoPlayer(props: CustomVideoPlayerProps) {
   const isMobile = useIsMobile();
-  
-  return isMobile 
-    ? <MobileVideoPlayer {...props} /> 
+
+  return isMobile
+    ? <MobileVideoPlayer {...props} />
     : <DesktopVideoPlayer {...props} />;
 }

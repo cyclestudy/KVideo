@@ -17,6 +17,8 @@ interface VideoPlayerProps {
 
 export function VideoPlayer({ playUrl, videoId, currentEpisode, onBack }: VideoPlayerProps) {
   const [videoError, setVideoError] = useState<string>('');
+  const [useProxy, setUseProxy] = useState(false);
+  const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
   // Use reactive hook to subscribe to history updates
   // This ensures the component re-renders when history is hydrated from localStorage
   const viewingHistory = useHistoryStore(state => state.viewingHistory);
@@ -66,8 +68,22 @@ export function VideoPlayer({ playUrl, videoId, currentEpisode, onBack }: VideoP
   // Handle video errors
   const handleVideoError = (error: string) => {
     console.error('Video playback error:', error);
+
+    // Auto-retry with proxy if not already using it
+    if (!useProxy) {
+      console.log('Attempting to retry with proxy...');
+      setUseProxy(true);
+      setShouldAutoPlay(true); // Force autoplay after proxy retry
+      setVideoError('');
+      return;
+    }
+
     setVideoError(error);
   };
+
+  const finalPlayUrl = useProxy
+    ? `/api/proxy?url=${encodeURIComponent(playUrl)}`
+    : playUrl;
 
   if (!playUrl) {
     return (
@@ -97,14 +113,6 @@ export function VideoPlayer({ playUrl, videoId, currentEpisode, onBack }: VideoP
             <p className="text-sm text-gray-300 mb-4">{videoError}</p>
             <div className="flex gap-2 justify-center flex-wrap">
               <Button
-                variant="primary"
-                onClick={() => setVideoError('')}
-                className="flex items-center gap-2"
-              >
-                <Icons.RefreshCw size={16} />
-                <span>重试</span>
-              </Button>
-              <Button
                 variant="secondary"
                 onClick={onBack}
                 className="flex items-center gap-2"
@@ -117,10 +125,12 @@ export function VideoPlayer({ playUrl, videoId, currentEpisode, onBack }: VideoP
         </div>
       ) : (
         <CustomVideoPlayer
-          src={playUrl}
+          key={useProxy ? 'proxy' : 'direct'} // Force remount when switching modes
+          src={finalPlayUrl}
           onError={handleVideoError}
           onTimeUpdate={handleTimeUpdate}
           initialTime={getSavedProgress()}
+          shouldAutoPlay={shouldAutoPlay}
         />
       )}
     </Card>

@@ -6,6 +6,7 @@ interface UseMobilePlaybackProps {
     setIsPlaying: (playing: boolean) => void;
     setIsLoading: (loading: boolean) => void;
     initialTime: number;
+    shouldAutoPlay: boolean;
     setDuration: (duration: number) => void;
     setCurrentTime: (time: number) => void;
     setPlaybackRate: (rate: number) => void;
@@ -24,6 +25,7 @@ export function useMobilePlaybackControls({
     setIsPlaying,
     setIsLoading,
     initialTime,
+    shouldAutoPlay,
     setDuration,
     setCurrentTime,
     setPlaybackRate,
@@ -91,6 +93,18 @@ export function useMobilePlaybackControls({
             }
         }
     }, [initialTime, videoRef]);
+
+    // Force autoplay when shouldAutoPlay is true (for proxy retry)
+    useEffect(() => {
+        if (shouldAutoPlay && videoRef.current) {
+            const playPromise = videoRef.current.play();
+            if (playPromise !== undefined) {
+                playPromise.catch((err: Error) => {
+                    console.warn('Force autoplay was prevented:', err);
+                });
+            }
+        }
+    }, [shouldAutoPlay, videoRef]);
 
     const handleVideoError = useCallback(() => {
         setIsLoading(false);

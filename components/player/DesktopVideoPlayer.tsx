@@ -11,6 +11,7 @@ interface DesktopVideoPlayerProps {
   onError?: (error: string) => void;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
   initialTime?: number;
+  shouldAutoPlay?: boolean;
 }
 
 export function DesktopVideoPlayer({
@@ -18,7 +19,8 @@ export function DesktopVideoPlayer({
   poster,
   onError,
   onTimeUpdate,
-  initialTime = 0
+  initialTime = 0,
+  shouldAutoPlay = false
 }: DesktopVideoPlayerProps) {
   const { refs, state } = useDesktopPlayerState();
   const {
@@ -35,6 +37,7 @@ export function DesktopVideoPlayer({
   const logic = useDesktopPlayerLogic({
     src,
     initialTime,
+    shouldAutoPlay,
     onError,
     onTimeUpdate,
     refs,
