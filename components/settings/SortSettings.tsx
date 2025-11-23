@@ -1,4 +1,5 @@
-import { sortOptions, type SortOption } from '@/lib/store/settings-store';
+import { type SortOption } from '@/lib/store/settings-store';
+import { sortOptions } from '@/lib/store/settings-helpers';
 
 interface SortSettingsProps {
     sortBy: SortOption;

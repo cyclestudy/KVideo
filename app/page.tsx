@@ -1,84 +1,26 @@
 'use client';
 
-import { useState, useRef, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { SearchForm } from '@/components/search/SearchForm';
 import { NoResults } from '@/components/search/NoResults';
 import { PopularFeatures } from '@/components/home/PopularFeatures';
 import { WatchHistorySidebar } from '@/components/history/WatchHistorySidebar';
-import { useSearchCache } from '@/lib/hooks/useSearchCache';
-import { useParallelSearch } from '@/lib/hooks/useParallelSearch';
-import { settingsStore } from '@/lib/store/settings-store';
 import { Navbar } from '@/components/layout/Navbar';
 import { SearchResults } from '@/components/home/SearchResults';
+import { useHomePage } from '@/lib/hooks/useHomePage';
 
 function HomePage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { loadFromCache, saveToCache } = useSearchCache();
-  const hasLoadedCache = useRef(false);
-
-  const [query, setQuery] = useState('');
-  const [hasSearched, setHasSearched] = useState(false);
-  const [currentSortBy, setCurrentSortBy] = useState('default');
-
-  // Search stream hook
   const {
+    query,
+    hasSearched,
     loading,
     results,
     availableSources,
     completedSources,
     totalSources,
-    performSearch,
-    resetSearch,
-    loadCachedResults,
-  } = useParallelSearch(
-    saveToCache,
-    (q: string) => router.replace(`/?q=${encodeURIComponent(q)}`, { scroll: false })
-  );
-
-  // Load sort preference on mount
-  useEffect(() => {
-    const settings = settingsStore.getSettings();
-    setCurrentSortBy(settings.sortBy);
-  }, []);
-
-  // Load cached results on mount
-  useEffect(() => {
-    if (hasLoadedCache.current) return;
-    hasLoadedCache.current = true;
-
-    const urlQuery = searchParams.get('q');
-    const cached = loadFromCache();
-
-    if (urlQuery) {
-      setQuery(urlQuery);
-      if (cached && cached.query === urlQuery && cached.results.length > 0) {
-
-        setHasSearched(true);
-        loadCachedResults(cached.results, cached.availableSources);
-      } else {
-
-        setTimeout(() => handleSearch(urlQuery), 100);
-      }
-    }
-  }, [searchParams, loadFromCache, loadCachedResults]);
-
-  const handleSearch = (searchQuery: string) => {
-    setQuery(searchQuery);
-    setHasSearched(true);
-    const settings = settingsStore.getSettings();
-    // Filter enabled sources
-    const enabledSources = settings.sources.filter(s => s.enabled);
-    performSearch(searchQuery, enabledSources, currentSortBy as any);
-  };
-
-  const handleReset = () => {
-    setHasSearched(false);
-    setQuery('');
-    resetSearch();
-    router.replace('/', { scroll: false });
-  };
+    handleSearch,
+    handleReset,
+  } = useHomePage();
 
   return (
     <div className="min-h-screen">
