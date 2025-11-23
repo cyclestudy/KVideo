@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Use Edge Runtime for better geographic distribution
+export const runtime = 'edge';
+
 export async function GET(request: NextRequest) {
     const url = request.nextUrl.searchParams.get('url');
 
