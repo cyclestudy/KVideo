@@ -15,7 +15,7 @@ interface VideoCardProps {
     videoUrl: string;
     cardId: string;
     isActive: boolean;
-    onCardClick: (e: React.MouseEvent, cardId: string, videoUrl: string) => void;
+    onCardClick: (e: React.MouseEvent, cardId: string, videoUrl: string, video: Video) => void;
 }
 
 export const VideoCard = memo<VideoCardProps>(({
@@ -35,7 +35,7 @@ export const VideoCard = memo<VideoCardProps>(({
             <Link
                 key={cardId}
                 href={videoUrl}
-                onClick={(e) => onCardClick(e, cardId, videoUrl)}
+                onClick={(e) => onCardClick(e, cardId, videoUrl, video)}
                 role="listitem"
                 aria-label={`${video.vod_name}${video.vod_remarks ? ` - ${video.vod_remarks}` : ''}`}
                 prefetch={false}

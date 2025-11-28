@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { Icons } from '@/components/ui/Icon';
 
 interface NavbarProps {
     onReset: () => void;
@@ -38,6 +39,15 @@ export function Navbar({ onReset }: NavbarProps) {
                         </Link>
 
                         <div className="flex items-center gap-3">
+                            <a
+                                href="https://github.com/KuekHaoYang/KVideo"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-10 h-10 flex items-center justify-center rounded-[var(--radius-full)] bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-color)] hover:bg-[color-mix(in_srgb,var(--accent-color)_10%,transparent)] transition-all duration-200 cursor-pointer"
+                                aria-label="GitHub"
+                            >
+                                <Icons.Github size={20} />
+                            </a>
                             <Link
                                 href="/settings"
                                 className="w-10 h-10 flex items-center justify-center rounded-[var(--radius-full)] bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-color)] hover:bg-[color-mix(in_srgb,var(--accent-color)_10%,transparent)] transition-all duration-200 cursor-pointer"

@@ -26,6 +26,7 @@ export interface VideoItem {
   vod_actor?: string;
   vod_director?: string;
   vod_content?: string;
+  vod_play_url?: string;
   source: string;
   latency?: number; // Response time in milliseconds
 }

@@ -8,9 +8,10 @@ import { Video } from '@/lib/types';
 interface VideoGridProps {
   videos: Video[];
   className?: string;
+  openDirectLinks?: boolean;
 }
 
-export const VideoGrid = memo(function VideoGrid({ videos, className = '' }: VideoGridProps) {
+export const VideoGrid = memo(function VideoGrid({ videos, className = '', openDirectLinks = false }: VideoGridProps) {
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(24);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -36,7 +37,25 @@ export const VideoGrid = memo(function VideoGrid({ videos, className = '' }: Vid
   }, []);
 
   // Memoize the click handler to prevent re-renders
-  const handleCardClick = useCallback((e: React.MouseEvent, videoId: string, videoUrl: string) => {
+  const handleCardClick = useCallback((e: React.MouseEvent, videoId: string, videoUrl: string, video?: Video) => {
+    if (openDirectLinks && video?.vod_play_url) {
+      // For secret page: extract first video URL and open directly
+      e.preventDefault();
+      const playUrls = video.vod_play_url.split('$$$');
+      if (playUrls.length > 0) {
+        const firstPlaylist = playUrls[0];
+        const segments = firstPlaylist.split('#');
+        if (segments.length > 0) {
+          const urls = segments[0].split('$');
+          if (urls.length > 1) {
+            window.open(urls[1], '_blank');
+            return;
+          }
+        }
+      }
+      return;
+    }
+
     // Check if it's a mobile device
     const isMobile = window.innerWidth < 1024; // lg breakpoint
 
@@ -52,7 +71,7 @@ export const VideoGrid = memo(function VideoGrid({ videos, className = '' }: Vid
       }
     }
     // On desktop, let the Link work normally
-  }, [activeCardId]);
+  }, [activeCardId, openDirectLinks]);
 
   // Memoize video items to prevent unnecessary re-computations
   const videoItems = useMemo(() => {
