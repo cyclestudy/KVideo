@@ -1,69 +1,47 @@
 'use client';
 
-import { Suspense } from 'react';
-import { SearchForm } from '@/components/search/SearchForm';
-import { NoResults } from '@/components/search/NoResults';
-import { PopularFeatures } from '@/components/home/PopularFeatures';
-import { WatchHistorySidebar } from '@/components/history/WatchHistorySidebar';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
-import { SearchResults } from '@/components/home/SearchResults';
-import { useHomePage } from '@/lib/hooks/useHomePage';
+import { WatchHistorySidebar } from '@/components/history/WatchHistorySidebar';
+import { DoubanHotList } from '@/components/home/DoubanHotList';
+import { DoubanHotItem, fetchDoubanHot } from '@/lib/services/doubanHot';
 
 function HomePage() {
-  const {
-    query,
-    hasSearched,
-    loading,
-    results,
-    availableSources,
-    completedSources,
-    totalSources,
-    handleSearch,
-    handleReset,
-  } = useHomePage();
+  const [items, setItems] = useState<DoubanHotItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadHotList = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchDoubanHot();
+      setItems(data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '获取热门列表失败';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadHotList();
+  }, [loadHotList]);
 
   return (
     <div className="min-h-screen">
-      {/* Glass Navbar */}
-      <Navbar onReset={handleReset} />
+      <Navbar onReset={loadHotList} />
 
-      {/* Search Form - Separate from navbar */}
-      <div className="max-w-7xl mx-auto px-4 mt-6 mb-8 relative" style={{
-        transform: 'translate3d(0, 0, 0)',
-        zIndex: 1000
-      }}>
-        <SearchForm
-          onSearch={handleSearch}
-          onClear={handleReset}
-          isLoading={loading}
-          initialQuery={query}
-          currentSource=""
-          checkedSources={completedSources}
-          totalSources={totalSources}
-        />
-      </div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 pt-10">
+        <div className="mb-8 space-y-2">
+          <h1 className="text-3xl font-bold text-[var(--text-color)]">发现今日热门</h1>
+          <p className="text-[var(--text-color-secondary)]">基于豆瓣热榜的实时精选，为你推荐当下最受关注的影视作品</p>
+        </div>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        {/* Results Section */}
-        {(results.length >= 1 || (!loading && results.length > 0)) && (
-          <SearchResults
-            results={results}
-            availableSources={availableSources}
-            loading={loading}
-          />
-        )}
-
-        {/* Popular Features - Homepage */}
-        {!loading && !hasSearched && <PopularFeatures onSearch={handleSearch} />}
-
-        {/* No Results */}
-        {!loading && hasSearched && results.length === 0 && (
-          <NoResults onReset={handleReset} />
-        )}
+        <DoubanHotList items={items} loading={loading} error={error} onRetry={loadHotList} />
       </main>
 
-      {/* Watch History Sidebar */}
       <WatchHistorySidebar />
     </div>
   );
